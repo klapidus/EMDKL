@@ -76,7 +76,7 @@ private:
 
 public:
 
-  EMDKLAnalyser() {};
+  EMDKLAnalyser() : fname_sim(""), fname_exp(""), fname_exp_to_sim("") {};
 
   void set_sim_emd_fname(TString const fname);
   void set_exp_emd_fname(TString const fname);
@@ -102,6 +102,7 @@ public:
   TH1F* get_ave_exp_to_sim(Int_t const sim_trial_sample_size); //TODO this one might be further cross-checked
 
   TH1F* get_min_sim1_to_sim2(Int_t const ntrials, Int_t const trial_sample_size1, Int_t const trial_sample_size2);
+  TH1F* get_min_sim1_to_sim2(Int_t const ntrials, vector<cjet> *cjets1, vector<cjet> *cjets2, Int_t const trial_sample_size1, Int_t const trial_sample_size2);
 
 private:
   void fill_2Dhisto_from_histos(TH1F** h_1D, Int_t const nhistos, TH2F* h_2D);

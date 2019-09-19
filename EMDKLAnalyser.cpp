@@ -45,9 +45,9 @@ void EMDKLAnalyser::set_exp_to_sim_emd_fname(TString const fname) {
 }
 
 void EMDKLAnalyser::fill_all_emd_values() {
-  fill_emd_values_from_file(fname_sim, emd_values_sim, sim_sample_size);
-  fill_emd_values_from_file(fname_exp, emd_values_exp, exp_sample_size);
-  fill_emd_values_from_file(fname_exp_to_sim, emd_values_exp_to_sim, exp_sample_size, sim_sample_size);
+  if ( !fname_sim.IsNull() ) fill_emd_values_from_file(fname_sim, emd_values_sim, sim_sample_size);
+  if ( !fname_exp.IsNull() ) fill_emd_values_from_file(fname_exp, emd_values_exp, exp_sample_size);
+  if ( !fname_exp_to_sim.IsNull() ) fill_emd_values_from_file(fname_exp_to_sim, emd_values_exp_to_sim, exp_sample_size, sim_sample_size);
 }
 
 void EMDKLAnalyser::set_sim_sample_size(Int_t const size) {
@@ -158,7 +158,8 @@ TH1F* EMDKLAnalyser::get_X_sim_to_sim(Int_t const ntrials, Int_t const trial_sam
 
 }
 
-TH1F* EMDKLAnalyser::get_min_sim1_to_sim2(Int_t const ntrials, Int_t const trial_sample_size1, Int_t const trial_sample_size2) {
+
+TH1F* EMDKLAnalyser::get_min_sim1_to_sim2(Int_t const ntrials, vector<cjet> *cjets1, vector<cjet> *cjets2, Int_t const trial_sample_size1, Int_t const trial_sample_size2) {
 
   Int_t nbins = 0;
   Int_t valuel = 0;
@@ -177,8 +178,8 @@ TH1F* EMDKLAnalyser::get_min_sim1_to_sim2(Int_t const ntrials, Int_t const trial
     hemd_X_sim1_to_sim2[tr] = new TH1F(hname_X,hname_X,nbins,valuel,valuer);
     hemd_X_sim1_to_sim2[tr]->Sumw2(kFALSE);
 
-    std::vector<cjet> jets_sim1_trial_sample = get_custom_size_sample(cjets_sim1, trial_sample_size1);
-    std::vector<cjet> jets_sim2_trial_sample = get_custom_size_sample(cjets_sim2, trial_sample_size2);
+    std::vector<cjet> jets_sim1_trial_sample = get_custom_size_sample(cjets1, trial_sample_size1);
+    std::vector<cjet> jets_sim2_trial_sample = get_custom_size_sample(cjets2, trial_sample_size2);
 
     vector<Float_t> weights_emd_X_sim_to_sim;
     vector<Float_t> emd_X_sim_to_sim;
@@ -363,7 +364,7 @@ vector<Float_t> EMDKLAnalyser::min_value_sim_to_sim(std::vector<cjet> const & sa
       auto emd_value = all_emd_values_sim[j1.origin_index][j2.origin_index];
       if (emd_value < min_value) {
         min_value = emd_value;
-        weight = (j1.weight) * (j2.weight);
+        weight = (j1.weight) * (j2.weight); //?
       }
     }
     min_values.push_back(min_value);
