@@ -62,8 +62,10 @@ void EMDKLAnalyser::set_exp_cjets(vector<cjet> *cjets) {
   cjets_exp = cjets;
 }
 
-void EMDKLAnalyser::set_sim_cjets(vector<cjet> *cjets) {
-  cjets_sim = cjets;
+void EMDKLAnalyser::set_sim_cjets(vector<cjet> *cjets, int const sample) {
+  if (0 == sample)      cjets_sim = cjets;
+  else if (1 == sample) cjets_sim1 = cjets;
+  else if (2 == sample) cjets_sim2 = cjets;
 }
 
 TH1F* EMDKLAnalyser::get_max_sim_to_sim(Int_t const ntrials, Int_t const trial_sample_size1, Int_t const trial_sample_size2) {
@@ -154,6 +156,65 @@ TH1F* EMDKLAnalyser::get_X_sim_to_sim(Int_t const ntrials, Int_t const trial_sam
 
   return hemd_X_sim_to_sim_2D_profile;
 
+}
+
+TH1F* EMDKLAnalyser::get_min_sim1_to_sim2(Int_t const ntrials, Int_t const trial_sample_size1, Int_t const trial_sample_size2) {
+
+  Int_t nbins = 0;
+  Int_t valuel = 0;
+  Int_t valuer = 0;
+
+  nbins = 15;
+  valuel = 0;
+  valuer = 15;
+
+  TH1F *hemd_X_sim1_to_sim2[ntrials];
+
+  for (int tr = 0; tr < ntrials; tr++) {
+
+    TString hname_X = "hemd_X_sim1_to_sim2_";
+    hname_X += tr;
+    hemd_X_sim1_to_sim2[tr] = new TH1F(hname_X,hname_X,nbins,valuel,valuer);
+    hemd_X_sim1_to_sim2[tr]->Sumw2(kFALSE);
+
+    std::vector<cjet> jets_sim1_trial_sample = get_custom_size_sample(cjets_sim1, trial_sample_size1);
+    std::vector<cjet> jets_sim2_trial_sample = get_custom_size_sample(cjets_sim2, trial_sample_size2);
+
+    vector<Float_t> weights_emd_X_sim_to_sim;
+    vector<Float_t> emd_X_sim_to_sim;
+    //TO DO:
+    emd_X_sim_to_sim = min_value_sim_to_sim(jets_sim1_trial_sample, jets_sim2_trial_sample, emd_values_sim, weights_emd_X_sim_to_sim);
+    for (Int_t j = 0; j < jets_sim1_trial_sample.size(); j++) {
+      hemd_X_sim1_to_sim2[tr]->Fill( emd_X_sim_to_sim[j], weights_emd_X_sim_to_sim[j] );
+    }
+
+  }//ntrials
+
+  //normalize the sim-sim distance, needed for the 2D profile
+  //divide by the sum of weights???
+  for (int tr = 0; tr < ntrials; tr++) {
+    auto tnorm_ave = hemd_X_sim1_to_sim2[tr]->Integral();
+    hemd_X_sim1_to_sim2[tr]->Scale(1./tnorm_ave);
+  }
+
+  TString histo_name = "hemdkl_";
+//  histo_name += X;
+  histo_name += "min";
+  histo_name += "_sim1_to_sim2_2D_profile";
+
+  //2D profile of EMD min sim to sim
+  TH2F *hemd_X_sim1_to_sim2_2D = new TH2F("hemd_X_sim1_to_sim2_2D","hemd_X_sim1_to_sim2_2D",nbins,valuel,valuer,1000,0,1.0);
+  TH1F *hemd_X_sim1_to_sim2_2D_profile = new TH1F(histo_name,histo_name,nbins,valuel,valuer);
+
+  fill_2Dhisto_from_histos(hemd_X_sim1_to_sim2, ntrials, hemd_X_sim1_to_sim2_2D);
+  make_profile_from_2Dhisto(hemd_X_sim1_to_sim2_2D, hemd_X_sim1_to_sim2_2D_profile);
+
+  for (int tr = 0; tr < ntrials; tr++) {
+    delete hemd_X_sim1_to_sim2[tr];
+  }
+  delete hemd_X_sim1_to_sim2_2D;
+
+  return hemd_X_sim1_to_sim2_2D_profile;
 }
 
 void EMDKLAnalyser::get_two_non_overlapping_samples(std::vector<cjet> & nsample1, std::vector<cjet> & nsample2, std::vector<cjet> *insample, Int_t desired_size1, Int_t desired_size2) {
